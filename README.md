@@ -59,7 +59,7 @@ replies an offer-comparison needs.
 
 ### `advice_seeking`
 
-**Definition:** The writer still has a live personal decision, or an explicit ask the comments can answer.
+**Definition:** The writer wants help with a personal next step — a live decision about their own job, offer, team, or skills.
 
 **Example 1:**
 > Leave team after 1.5 years? I got a sub-par review on a deprecation team. A friend is starting an AI product in another division and wants me to join. Would leaving push my promotion timeline back?
@@ -69,7 +69,7 @@ replies an offer-comparison needs.
 
 ### `situation_report`
 
-**Definition:** The writer is telling what already happened to them — informing, venting, or celebrating. They are not asking what to do next.
+**Definition:** A first-person account of something that already happened to the writer — informing, venting, or celebrating — with no ask about what they should do next.
 
 **Example 1:**
 > Got laid off by AI. Seventeen of us were told our roles were redundant on a Teams call during probation. I'm upset. I guess I'll take some time off and brush up DSA.
@@ -79,7 +79,7 @@ replies an offer-comparison needs.
 
 ### `industry_take`
 
-**Definition:** A general claim about tech careers, AI, hiring, companies, or the market — not what the writer should do about their own case. A checkable fact counts if it carries the claim.
+**Definition:** A general claim or discussion about tech careers, AI, hiring, companies, or the market, including questions about the world rather than the writer's own next step. A checkable fact counts if it carries the claim.
 
 **Example 1:**
 > Software-development employment has continued to increase since ChatGPT. CPS data, 2022 to now: employment up, unemployment also up, and the gain is stronger for ages 30–44 than for people in their 20s.
@@ -158,8 +158,6 @@ jump between seeds; that is in `criteria.md` already.
 > *Could have been:* `situation_report` (personal turnaround) or `industry_take`.
 >
 > *I chose, because:* `industry_take`. The load-bearing claim is about the subreddit and the industry. The personal sentence is the illustration, not the job of the post.
-
----
 
 ---
 

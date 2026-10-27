@@ -3,6 +3,6 @@
 # Copy these from your README so the baseline is judged on exactly the
 # definitions you wrote. baseline.py reads this file.
 
-advice_seeking: the writer still has a live personal decision, or an explicit ask the comments can answer
-situation_report: the writer is telling what already happened to them — informing, venting, or celebrating, not asking what to do next
-industry_take: a general claim about tech careers, AI, hiring, companies, or the market, not what the writer should do about their own case
+advice_seeking: the writer wants help with a personal next step — a live decision about their own job, offer, team, or skills
+situation_report: a first-person account of something that already happened to the writer, informing, venting, or celebrating, with no ask about what they should do next
+industry_take: a general claim or discussion about tech careers, AI, hiring, companies, or the market, including questions about the world rather than the writer's own next step
