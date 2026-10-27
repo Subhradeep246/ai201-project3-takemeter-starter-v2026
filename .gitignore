@@ -21,6 +21,21 @@ models/
 # `git add -A` in Colab commits a model checkpoint to your repo.
 takemeter_out/
 
+# Local collection / labelling scratch — not the submission
+_*.py
+data/candidates.json
+data/comment_candidates.json
+data/prelabeled*.json
+data/to_review.json
+data/labels_advice.json
+data/labels_report.json
+data/labels_take.json
+data/review_*.txt
+data/sample24.txt
+data/comment_sample20.txt
+data/comment_review.txt
+data/extra_reports*.txt
+
 # OS noise
 .DS_Store
 Thumbs.db

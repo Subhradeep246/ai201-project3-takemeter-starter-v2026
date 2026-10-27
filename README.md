@@ -173,7 +173,15 @@ jump between seeds; that is in `criteria.md` already.
 
 **Anything I changed from the defaults, and why:** Nothing. Hyperparameters are vocabulary this unit, not decisions. The labels in the notebook were changed to match `labels.csv`: `advice_seeking`, `situation_report`, `industry_take`.
 
-**Split sizes:** Stratified 70/15/15 from the notebook. Exact train/val/test counts, and the per-label test counts, go in after section 3 runs. `situation_report` will have fewer than 8 in test — that is already the diagnosis for next unit's variance.
+**Split sizes:** Stratified 70/15/15, seed 42: train 139 / val 31 / test 30.
+
+| Label | train | val | test |
+|---|---|---|---|
+| `advice_seeking` | 60 | 13 | 13 |
+| `industry_take` | 59 | 13 | 13 |
+| `situation_report` | 20 | 5 | 4 |
+
+`situation_report` has 4 examples in test — under 8. Its F1 next unit will jump between seeds, which is why criterion 3 is 0.40 rather than matching the other two labels.
 
 
 
