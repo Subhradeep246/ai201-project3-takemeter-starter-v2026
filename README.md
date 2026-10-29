@@ -136,6 +136,13 @@ rare on this subreddit — most vents still ask "what do I do". I did not
 relabel those as reports just to pad the class. Test F1 on ~4–5 rows will
 jump between seeds; that is in `criteria.md` already.
 
+The table above is the set that unit 5 and the unit 6 before-run trained on.
+During unit 6 I moved 8 rows from `situation_report` to `industry_take`
+because they broke the decision rule (questions about the world, general
+claims, third-person anecdotes). After that move the file is
+`advice_seeking` 86 (43.0%), `industry_take` 93 (46.5%),
+`situation_report` 21 (10.5%). No label is over 70%.
+
 **Three hard cases**
 
 **1.**
@@ -206,7 +213,13 @@ jump between seeds; that is in `criteria.md` already.
 - *What came back:* The install, `test.py` green except the expected baseline-model warning, and the three label strings in the notebook.
 - *What I changed:* Left training settings at the starter defaults. Wrote `criteria.md` before looking at any trained numbers.
 
-**Pre-labelling disclosure:** After 21 cold labels, a keyword heuristic pre-sorted the rest into three piles. I then read every keep row and overrode the pile name whenever the decision rule said so. The heuristic systematically treated first-person stories with a question at the end as reports; review moved those to `advice_seeking`. True `industry_take` news/analysis posts were kept. Rows that were megathreads, Discord/product promos, or duplicates were dropped, not relabelled.
+**Moment 3 — unit 6**
+
+- *What I asked for:* Run the unit 6 test in order: baseline, three seeds, the staff-set labels, a verdict on each criterion, one fix, and the re-run. Write the baseline prediction before the comparison.
+- *What came back:* The zero-shot run, the two three-seed files, and a pass over the 29 `situation_report` rows against the decision rule.
+- *What I changed:* Kept the prediction as it was written, including the part that turned out wrong (I expected the fine-tune to beat the baseline on the two large classes). Moved 8 rows that were not closed first-person stories. Left the five targets in `criteria.md` where unit 5 put them.
+
+**Pre-labelling disclosure:** After 21 cold labels, a keyword heuristic pre-sorted the rest into three piles. I then read every keep row and overrode the pile name whenever the decision rule said so. The heuristic systematically treated first-person stories with a question at the end as reports; review moved those to `advice_seeking`. True `industry_take` news/analysis posts were kept. Rows that were megathreads, Discord/product promos, or duplicates were dropped, not relabelled. Unit 6 found 8 rows in `situation_report` that this review still got wrong. Those moves are noted on the rows.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
@@ -220,20 +233,23 @@ jump between seeds; that is in `criteria.md` already.
 <!-- Both models on the same posts. `python baseline.py --trained results.json`
      prints this table for you. -->
 
+Same 30 posts (`test_split.csv`). Baseline is `facebook/bart-large-mnli` with the definitions in `label_definitions.txt`. Trained is the unit 5 seed-42 DistilBERT run in `results.json` (CPU, torch 2.14.1). This machine's unit 6 re-runs are torch 2.15.0+cpu, also CPU.
+
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.700 | 0.667 | -0.033 |
+| Macro F1 | 0.508 | 0.478 | -0.030 |
+| F1 — `advice_seeking` | 0.750 | 0.706 | -0.044 |
+| F1 — `industry_take` | 0.774 | 0.727 | -0.047 |
+| F1 — `situation_report` | 0.000 | 0.000 | +0.000 |
 
 **What I predicted before I looked:**
-<!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
-     prediction made afterwards isn't one. -->
+
+Written before `baseline.py` ran. The seed-42 trained file already existed from unit 5, so this is a prediction about the gap, not a first look at those numbers. Zero-shot only gets the three definitions. `advice_seeking` and `industry_take` are easy hypotheses to entail — a personal next step versus a claim about the industry — so I expect the baseline to beat a majority-class guess and to get a useful share of those two right. `situation_report` is defined by the absence of an ask, and a layoff post still narrates what the writer did next, so I expect the baseline to call almost all of them `advice_seeking`. I expect the fine-tune to beat the baseline on `advice_seeking` and `industry_take`, and I do not expect it to grow a `situation_report` detector out of about twenty training rows. If the two overall accuracies land close, fine-tuning mostly rediscovered the definitions.
 
 **What the gap actually means:**
-<!-- If the baseline matched your trained model, your fine-tuning added
-     nothing — and that is a real finding, not a failure. Say it plainly. -->
+
+Fine-tuning added nothing. On the same 30 posts the zero-shot model is more accurate (0.700 vs 0.667) and has a higher macro F1 (0.508 vs 0.478). It is ahead on both large classes. Both models score 0.000 on `situation_report`: the baseline never got one of the four right, and the fine-tune called all four `advice_seeking`. The definitions already separate a personal ask from an industry claim. Three epochs on 139 rows did not beat that, and twenty `situation_report` training rows were not enough to teach a class the definitions also miss. That is the finding.
 
 
 
@@ -241,32 +257,31 @@ jump between seeds; that is in `criteria.md` already.
 
 ## Run Log — Before
 
-<!-- Five criteria across three seeds. The notebook's section 6 prints the
-     spread table; the Target and Verdict columns are yours. -->
+Hardware for all three seeds: CPU, torch 2.15.0+cpu. Same code path as the notebook's section 6 (`distilbert-base-uncased`, 3 epochs, lr `2e-5`, batch 16, max length 128). Accuracy moved 0.100 across seeds. Seed 42 and seed 7 landed on the same hard-label counts; their confidence means differ (0.453 vs 0.441 when right), so the runs are not copies of one file.
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.55 | 0.667 | 0.667 | 0.567 | MET |
+| 2. Macro F1 | ≥ 0.50 | 0.478 | 0.478 | 0.379 | MISSED |
+| 3. Worst-label F1 (`situation_report`) | ≥ 0.40 | 0.000 | 0.000 | 0.000 | MISSED |
+| 4. Best F1 minus worst F1 | ≤ 0.35 | 0.727 | 0.727 | 0.667 | MISSED |
+| 5. Confident-third gap | ≥ 0.10 | 0.400 | 0.500 | 0.500 | MET |
+
+Criterion 3 is the minimum F1 across the three labels. On every seed that minimum is `situation_report`. The other two labels cleared 0.40 on every seed (`advice_seeking` 0.706 / 0.706 / 0.667, `industry_take` 0.727 / 0.727 / 0.471).
 
 ### Confusion matrix
 
-<!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
-     An image of a matrix earns nothing. -->
+Seed 42, the first of the three. Rows are the true label.
 
-| true \ predicted |  |  |  |
+| true \ predicted | advice_seeking | situation_report | industry_take |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **advice_seeking** | 12 | 0 | 1 |
+| **situation_report** | 4 | 0 | 0 |
+| **industry_take** | 5 | 0 | 8 |
 
 **My biggest off-diagonal number, and what it means:**
-<!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
-     direction. "7 real analysis posts were called hot_take and only 3 went the
-     other way" is a direction, not just an error rate. -->
+
+5 real `industry_take` posts were called `advice_seeking`, and only 1 real `advice_seeking` post was called `industry_take`. The model leans toward `advice_seeking` on that pair. The `situation_report` column is all zeros: the model never predicted the label. All 4 real reports were called `advice_seeking`, and 0 went the other way, because the other way never happened. Seed 7 has the same matrix. Seed 2024 sends 9 of 13 `industry_take` posts and all 4 reports to `advice_seeking`.
 
 
 
@@ -279,22 +294,32 @@ jump between seeds; that is in `criteria.md` already.
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.55 | MET | 0.667, 0.667, and 0.567 all clear 0.55. Seed 2024's margin is 0.017, smaller than the 0.100 seed spread, so the call is fragile. |
+| 2 | Macro F1 | ≥ 0.50 | MISSED | 0.478, 0.478, 0.379. Every seed is under 0.50. |
+| 3 | Every label's F1 | ≥ 0.40 | MISSED | `situation_report` is 0.000 on all three seeds. |
+| 4 | Best F1 minus worst F1 | ≤ 0.35 | MISSED | 0.727, 0.727, 0.667. The gap is the 0.000 on `situation_report`. |
+| 5 | Confident-third gap | ≥ 0.10 | MET | 0.400, 0.500, 0.500. The sure third is right 0.90 of the time on every seed. |
 
 **Diagnoses**
 
-<!-- For each miss: the cause, and how you know. The four common causes are:
-     too few examples for a label, a boundary you applied inconsistently, a
-     genuinely hard label pair, and a task the model can't reach from this
-     much data.
+Criteria 2, 3, and 4 miss for the same reason. `situation_report` has F1 0.000 on every seed, the model never emits the label, and that zero pulls macro F1 under 0.50 and opens a gap well past 0.35.
 
-     ⚠️ Use your agreement report as evidence. It is the only instrument you
-     have that can tell a LABELLING problem from a MODEL problem, and this
-     section is graded on whether you used it that way. -->
+Two causes, and they are separable.
+
+**Too few examples.** The before-run file had 29 reports. Every seed put 4 in the test split. A label the model never predicts cannot score above 0 on a support of 4, and a support of 4 would jump between seeds even if the model were trying. The zero column says it is not trying. The plurality class is `advice_seeking`, and first-person career text is what that class looks like, so the model parks reports there.
+
+**The boundary was applied inconsistently.** I re-read all 29 `situation_report` rows against the decision rule in this file. Eight are not closed first-person stories:
+
+- "Are your lead devs always in meetings?" and "Do you guys ever see a disconnect…" are questions about the world.
+- "I'm curious to know what others think" is an ask, and the writer has already resigned.
+- The Meta-contractor comment, the "you are a number / take the money" comment, and the scrum-master comment are general claims. The personal sentence is the illustration. That is the hard-case rule I already wrote for `industry_take`.
+- "Had a friend of a friend…" and "Knew a guy who…" are third-person anecdotes. The definition requires something that happened to the writer.
+
+That re-read is the labelling evidence. `data/staff_labels.csv` is not in this repo — the starter says the TF sends it after `my_staff_labels.csv` exists — so `agreement.py` cannot yet score me against staff. I labelled the 30 staff posts anyway, under `data/staff_taxonomy.md`, and the same kind of miss shows up there as a risk: the staff rules turn on whether a fact is load-bearing, and I had already mis-filed posts on my own set where a personal sentence was decoration on a claim. Until the staff file arrives I cannot quote a rate. The evidence I do have is those 8 rows.
+
+The pair itself is also hard. A layoff story and an advice post share first person, a workplace, and a next step. The rule that separates them is the absence of an ask. Zero-shot, given that definition in plain text, also scored 0.000 on `situation_report`. So this is not only a fine-tune failure. The class is small, some of its rows were the neighboring classes, and the boundary is a negative.
+
+Criteria 1 and 5 held. Accuracy stays above a majority-class guess because `advice_seeking` and `industry_take` are learnable, and the confident third is actually more accurate than the unsure third. The model's confidence is usable on the two classes it knows. It is not evidence that `situation_report` works.
 
 
 
@@ -308,47 +333,26 @@ jump between seeds; that is in `criteria.md` already.
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** not computed. `my_staff_labels.csv` is done (30 rows, text pasted unchanged). `data/staff_labels.csv` is not in the repo. `agreement.py` stops without it and tells you to ask the TF, which matches `data/staff_taxonomy.md`. I am not filling in a rate or a staff label I do not have.
 
-<!-- Nobody grades this number. A 60% who argues every disagreement from the
-     stated rules beats a 95% who wrote "staff was right" nine times. Several
-     of the 30 were chosen because they're genuinely ambiguous — you should be
-     winning some of these. -->
+My labels, under the staff rules: `sp_001`–`sp_010` `analysis`, `sp_011`–`sp_020` `hot_take`, `sp_021`–`sp_030` `reaction`.
+
+How the rules got applied on the posts that look like traps:
+
+- `sp_014` ("times are down about 3%… so obviously the shoes are the whole story") is the taxonomy's own `hot_take` example. The 3% is a flourish.
+- `sp_005` ("2% in the shoes and another 2% the following year… 35 to 50 miles a week") is `analysis`. The second number is what separates mileage from the shoe. Same shape as the practice-set posts that compare a runner's own logs.
+- `sp_016` ("gel before 90 minutes") is `hot_take`. The practice set labels "Nobody needs a gel before 90 minutes" as `hot_take`. The time is the claim, not evidence for a separate claim.
+- `sp_007` and `sp_010` stay `analysis` under rule 3: a personal run is still analysis when the measurement carries the argument.
+- `sp_027` ("leaning at about 20 degrees… coming back felt like cheating") is `reaction`. The number is color, and the post is about how the run felt.
+- `sp_028` ("Third DNF this year… I don't really want to talk about it") is `reaction`. The count does not carry an argument. There is no argument.
 
 **Disagreements**
 
-<!-- Three lines each: the post, both labels, and who you think is right and
-     why — grounded in the staff definitions you were both applying.
-
-     Then sort each into one of three piles:
-       (a) the rule covered it and I applied it loosely → a consistency problem
-       (b) the rule genuinely doesn't say               → a gap in the definitions
-       (c) the rule is ambiguous here and my reading is defensible → argue it.
-           This is a legitimate win.
-
-     Pile (a) is the one that matters most for your diagnosis: if you applied a
-     written rule two different ways on 30 posts, that is direct evidence about
-     what you did across your own 200. -->
-
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
-
-**2.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+None I can adjudicate until the staff file is here. Inventing a staff label to argue with would be a fake disagreement.
 
 **What the pattern in my disagreements tells me:**
+
+I cannot use a staff rate I do not have to separate a labelling problem from a model problem. The substitute I used is the re-read of my own 29 reports, documented under Diagnoses. Eight of them broke a rule I had already written down. That is the pile-(a) pattern on my own set: the rule covered it, and the label did not follow it. It is weaker evidence than the staff set, because I am the one applying the rule and the one grading the application. When `data/staff_labels.csv` arrives, `python agreement.py` will list the real disagreements and this section should be replaced with those.
 
 
 
@@ -358,22 +362,27 @@ jump between seeds; that is in `criteria.md` already.
 
 **What I changed:**
 
+I re-applied the unit 5 decision rule to the 29 `situation_report` rows and moved 8 of them to `industry_take`. Nothing else changed: same model, same epochs, same learning rate, same batch size, same three seeds. The rows and the reason on each are in the `note` column. Counts after the move: `advice_seeking` 86, `industry_take` 93, `situation_report` 21.
+
 **Which diagnosis pointed at it:**
+
+The miss on criteria 2, 3, and 4 is `situation_report` at F1 0.000, with every test report called `advice_seeking`. The re-read showed 8 of the 29 training labels were actually questions, general claims, or third-person anecdotes. Teaching the model those rows as reports would train the neighboring classes into the thin one. The fix the diagnosis points at is to take those rows off the label, then train again. I did not lower the targets in `criteria.md`.
 
 ### Run Log — After
 
+Same hardware (CPU, torch 2.15.0+cpu) and the same training settings. The split is new, because the labels changed: each seed now has 3 `situation_report` rows in test, not 4. Before and after are not the same 30 posts.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.55 | 0.767 | 0.767 | 0.667 | MET |
+| 2. Macro F1 | ≥ 0.50 | 0.536 | 0.540 | 0.463 | MISSED |
+| 3. Worst-label F1 (`situation_report`) | ≥ 0.40 | 0.000 | 0.000 | 0.000 | MISSED |
+| 4. Best F1 minus worst F1 | ≤ 0.35 | 0.839 | 0.846 | 0.774 | MISSED |
+| 5. Confident-third gap | ≥ 0.10 | 0.300 | 0.400 | 0.500 | MET |
 
 **Did it help, and how do I know:**
 
-<!-- If it didn't, say so. Relabelling that didn't help is a genuinely
-     interesting result and earns full credit. -->
+It helped the two classes the model already had, and it did not help `situation_report`. Accuracy rose on every seed (0.667→0.767, 0.667→0.767, 0.567→0.667). Macro F1 rose on every seed (0.478→0.536, 0.478→0.540, 0.379→0.463), enough for seeds 42 and 7 to clear 0.50 and not enough for seed 2024, so criterion 2 stays a miss. `situation_report` F1 stayed 0.000. The after matrices still have a zero column for that label. On seeds 42 and 7 the three real reports are called `advice_seeking` (2 and 3 of them) or `industry_take`. On seed 2024 all 3 are called `industry_take`. Taking the mislabeled rows off the class made `industry_take` sharper — seed 42 went from 8/13 correct to 13/14 — and left the model with no report class to emit. Criterion 4 got worse because the best F1 went up and the worst stayed at zero. Relabelling was the right correction to the file. It was not a way to make 21 examples of a negative class learnable.
 
 
 
@@ -381,13 +390,15 @@ jump between seeds; that is in `criteria.md` already.
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped. -->
+**Criterion 2, macro F1 ≥ 0.50.** Seed 2024 is 0.463 after the fix. The other two seeds clear it. The miss is the seed where `industry_take` F1 drops to 0.615 and `situation_report` is still zero, so the average falls under 0.50. What I would do next is add closed first-person stories until the test slice is large enough that one seed cannot swing the macro average by this much. I stopped because the posts I still have are the 21 that survived the rule, and inventing more by calling live asks "reports" is the padding unit 5 already refused.
 
+**Criterion 3, every label F1 ≥ 0.40.** `situation_report` is 0.000 on every seed before and after. The model never predicts it. What I would do next is the same collection: more rows where the outcome already happened and there is no ask, on the order of the other two classes, and then train again. I stopped because 21 rows, with 3 in test, is the set the rule actually produces from this scrape. Lowering 0.40 would hide that.
 
+**Criterion 4, best-minus-worst F1 ≤ 0.35.** The gap is 0.839, 0.846, 0.774. It widened after the fix because `industry_take` got better and the worst label stayed at 0. The gap closes when criterion 3 closes. Same stop.
 
-**The gap between what I meant my labels to capture and what the model
-learned:**
-<!-- Two sentences. Your confusion matrix is the evidence. -->
+**The gap between what I meant my labels to capture and what the model learned:**
+
+I meant `situation_report` to be a closed first-person story with no ask. The model learned two classes, personal ask and industry claim. After the relabel the `situation_report` column is still all zeros, and the real reports are absorbed into `advice_seeking` on seeds 42 and 7 and into `industry_take` on seed 2024.
 
 
 
